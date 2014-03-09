@@ -442,12 +442,16 @@ WM_POWERBROADCAST(wParam, lParam)
 			Suspending = 0
 			If (StartXBMCatWinResume = 1)
 			 	{	LaunchApplication(XBMConiMONPath)
-			
+						while ConnectedToInternet() = False
+						{
+							Sleep 500
+							if a_index > 30
+								break
+						}
 					Sleep %StartupDelay%
-					;WinWait,XBMC,,6 ; wait 6 seconds
-					WinActivate, ahk_class XBMC ; activate and bring to front.
-
 					LaunchApplication(XBMCPath)
+					sleep 1000
+					WinActivate, ahk_class XBMC ; activate and bring to front.
 			
 					if (DisableFocusTemporarily = 1)
 					{
@@ -932,6 +936,11 @@ return
 
 
 ; >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 				FUNCTIONS 					<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+ConnectedToInternet(flag=0x40) { 
+Return DllCall("Wininet.dll\InternetGetConnectedState", "Str", flag,"Int",0) 
+}
 
 
 GetSettings(SettingsName, DefaultValue) ;Get settings from registry 
@@ -1801,32 +1810,35 @@ return
 run %A_ScriptDir% \XBMCLauncherGUI.exe
 return
 
-#!Enter:: ; Win+Alt+Enter shortcut key
-
+#IfWinActive ahk_class ImmersiveLauncher
+#!Enter::
+WinClose
 LaunchApplication(XBMCPath)
-;Sleep, 2000
 WinActivate, ahk_class XBMC
 FocussedOnce = 0
 LaunchApplication(iMONPath)
 LaunchApplication(XBMConiMONPath)
 Sleep, 1000
 WinActivate, ahk_class XBMC
+return
 
-WinGet, Style, Style, ahk_class XBMC
-	if (Style & 0xC00000)  ;Detects if XBMC has a title bar.
-		Send {VKDC}  ;Maximize XBMC to fullscreen mode if its in a window mode.
-	Return
+#IfWinActive ahk_class XBMC
+#!Enter::
+Send #!{VK74} ; if XBMC is Active (GSB Home Jump will activate)
+return
 
+#IfWinActive ahk_class _MIRACLE_20090309_1
+#!Enter::
+Send ^U
+return
 
-		SetTitleMatchMode 2
-		#IfWinActive XBMC ahk_class XBMC ; XBMC detection for XBMC/GSB Home Screen action.
-		#!Enter::
-		WinGet, Style, Style, ahk_class XBMC
-		if (Style & 0xC00000)  ;Detects if XBMC has a title bar.
-			Send {VKDC}  ;Maximize XBMC to fullscreen mode if its in a window mode.
-		WinMaximize ;Maximize XBMC if Windowed.
-		send, ^!{VK74} ; if XBMC is Active (GSB Home Jump will activate)
-		Return
-		
-		
-		
+#IfWinActive
+#!Enter::
+LaunchApplication(XBMCPath)
+WinActivate, ahk_class XBMC
+FocussedOnce = 0
+LaunchApplication(iMONPath)
+LaunchApplication(XBMConiMONPath)
+Sleep, 1000
+WinActivate, ahk_class XBMC
+return
